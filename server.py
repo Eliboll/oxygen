@@ -28,7 +28,7 @@ def hello_world():
         "Year" : request.args["Year"],
         "Date" : request.args["Date"],
         "Distance" : float(request.args["Distance"]),
-        "CO2" : (getEPA(request.args["Make"],request.args["Model"],request.args["Year"]) * float(request.args["Distance"]))
+        "CO2" : (getEPA(request.args["Make"],request.args["Model"],request.args["Year"]) * float(request.args["Distance"]) / 1000)
     }
     with open(JSON_FILE, "r") as json_file:
         data = json.load(json_file)
@@ -86,5 +86,5 @@ def carbonStats():
             this_week += entry["CO2"]
         elif (timediff > 604800 and timediff < 604800*2):
             last_week+= entry["CO2"]
-    return {"current" : this_week/1000,
-            "previous" : last_week/1000}
+    return {"current" : this_week,
+            "previous" : last_week}
