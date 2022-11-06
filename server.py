@@ -1,5 +1,6 @@
 from flask import Flask, request, g, jsonify
 import json
+import time
 app = Flask(__name__)
 
 JSON_FILE = "historyData.json"
@@ -14,7 +15,7 @@ def getEPA(make,model,year):
             if model in columns[3]:
                 if make in columns[2]:
                     csv.close()
-                    return columns[0]
+                    return float(columns[0])
     csv.close()
     return 0
 
@@ -27,7 +28,7 @@ def hello_world():
         "Year" : request.args["Year"],
         "Date" : request.args["Date"],
         "Distance" : float(request.args["Distance"]),
-        "CO2" : getEPA(request.args["Make"],request.args["Model"],request.args["Year"]) * float(request.args["Distance"])
+        "CO2" : (getEPA(request.args["Make"],request.args["Model"],request.args["Year"]) * float(request.args["Distance"]))
     }
     with open(JSON_FILE, "r") as json_file:
         data = json.load(json_file)
@@ -73,3 +74,17 @@ def getmodel():
     csv.close()
     return {"models" : model_list}
 
+@app.route("/carbonstats")
+def carbonStats():
+    json_file = open(JSON_FILE, "r")
+    data = json.loads(json_file.read())["entries"]
+    this_week=0
+    last_week=0
+    for entry in data:
+        timediff = time.time() - float(entry["Date"].replace(",",""))
+        if ( timediff <= 604800):
+            this_week += entry["CO2"]
+        elif (timediff > 604800 and timediff < 604800*2):
+            last_week+= entry["CO2"]
+    return {"current" : this_week/1000,
+            "previous" : last_week/1000}
